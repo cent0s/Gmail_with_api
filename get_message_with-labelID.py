@@ -23,14 +23,12 @@ service = build('gmail', 'v1', http=creds.authorize(Http()))
 
 def ListMessagesMatchingQuery(service, user_id, query=''):
     """List all Messages of the user's mailbox matching the query.
-
   Args:
     service: Authorized Gmail API service instance.
     user_id: User's email address. The special value "me"
     can be used to indicate the authenticated user.
     query: String used to filter messages returned.
     Eg.- 'from:user@some_domain.com' for Messages from a particular sender.
-
   Returns:
     List of Messages that match the criteria of the query. Note that the
     returned list contains Message IDs, you must use get with the
@@ -56,13 +54,11 @@ def ListMessagesMatchingQuery(service, user_id, query=''):
 
 def ListMessagesWithLabels(service, user_id, label_ids=[]):
     """List all Messages of the user's mailbox with label_ids applied.
-
   Args:
     service: Authorized Gmail API service instance.
     user_id: User's email address. The special value "me"
     can be used to indicate the authenticated user.
     label_ids: Only return Messages with these labelIds applied.
-
   Returns:
     List of Messages that have all required Labels applied. Note that the
     returned list contains Message IDs, you must use get with the
@@ -91,24 +87,28 @@ def ListMessagesWithLabels(service, user_id, label_ids=[]):
 
 def GetMessage(service, user_id, msg_id):
     """Get a Message with given ID.
-
     Args:
       service: Authorized Gmail API service instance.
       user_id: User's email address. The special value "me"
       can be used to indicate the authenticated user.
       msg_id: The ID of the Message required.
-
     Returns:
       A Message.
     """
     try:
         message = service.users().messages().get(userId=user_id, id=msg_id).execute()
-
         # print 'Message snippet: %s' % message['snippet']
 
-        print message['payload']['headers'][0]
+        print message['payload']['headers'][38]['value']
+        # print message['payload']['body']['data']
 
 
+
+        # Get content message clear text by message_id
+        # message = service.users().messages().get(userId=user_id, id=msg_id, format='raw').execute()
+        #
+        # msg_str = base64.urlsafe_b64decode(message['raw'].replace('-_', '+/').encode('ASCII'))
+        # print msg_str
 
 
         return message
@@ -120,6 +120,3 @@ if __name__ == '__main__':
     list_messages = ListMessagesWithLabels(service, 'me', 'Label_26')
 id_last_message = list_messages[0]['id']
 GetMessage(service, 'me', id_last_message)
-
-
-# https://developers.google.com/gmail/api/v1/reference/users/messages
