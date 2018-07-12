@@ -2,10 +2,14 @@
 """
 
 from apiclient import errors
-
+import time
+import os
+from threading import Timer
+import sys
 from apiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
+
 
 import base64
 import email
@@ -99,10 +103,10 @@ def GetMessage(service, user_id, msg_id):
         message = service.users().messages().get(userId=user_id, id=msg_id).execute()
         # print 'Message snippet: %s' % message['snippet']
 
-        print message['payload']['headers'][38]['value']
+        current_subject = message['payload']['headers'][38]['value']
+        print current_subject
+        # print message['snippet']
         # print message['payload']['body']['data']
-
-
 
         # Get content message clear text by message_id
         # message = service.users().messages().get(userId=user_id, id=msg_id, format='raw').execute()
@@ -110,13 +114,41 @@ def GetMessage(service, user_id, msg_id):
         # msg_str = base64.urlsafe_b64decode(message['raw'].replace('-_', '+/').encode('ASCII'))
         # print msg_str
 
-
         return message
 
     except errors.HttpError, error:
         print 'An error occurred: %s' % error
-
+def update_subject_content(content_subject):
+    file = open("last_message.txt", "w")
+    file.close()
+    time.sleep(2)
+    file = open("last_message.txt", "w")
+    file.write(content_subject)
+    file.close()
 if __name__ == '__main__':
     list_messages = ListMessagesWithLabels(service, 'me', 'Label_26')
 id_last_message = list_messages[0]['id']
-GetMessage(service, 'me', id_last_message)
+current_message = GetMessage(service, 'me', id_last_message)
+# help python can read special string encode utf8 japanese letter
+reload(sys)
+sys.setdefaultencoding('utf-8')
+current_subject = str(current_message['payload']['headers'][38]['value'])
+# write the first subject message to compare with after check
+# file = open("last_message.txt", "w")
+# file.write(current_subject)
+file = open("last_message.txt","r")
+before_subject = file.read()
+# # print "The lasest subject %s" % before_subject
+file.close()
+if os.stat("last_message.txt").st_size == 0:
+    print "Please give subject to last_message.txt file"
+else:
+    if current_subject == before_subject:
+        print "We don't have new message"
+    else:
+        print "WARING...WE HAVE NEW MESSAGE IN RKT PROJECT"
+        update_subject_content(current_subject)
+
+
+
+# https://developers.google.com/gmail/api/v1/reference/users/messages
